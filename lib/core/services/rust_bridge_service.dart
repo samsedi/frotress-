@@ -96,12 +96,11 @@ class RustBridgeService {
       // process launch, and its C symbols are then visible through the
       // main executable's own symbol table.
       dylib = ffi.DynamicLibrary.process();
+    } else if (Platform.isAndroid) {
+      // On Android, libraries in jniLibs are automatically unpacked and
+      // placed in the app's library search path. We can just load it by name.
+      dylib = ffi.DynamicLibrary.open('libwallet_ffi.so');
     } else {
-      // Only macOS and iOS builds of the native library exist today —
-      // see assets/native/ and ios/RustWalletFfi.podspec. Extending to
-      // Android (.so), Linux (.so), and Windows (.dll) needs those
-      // platforms' compiled artifacts added the same way, not a code
-      // change here.
       throw UnsupportedError('The Rust bridge is not bundled for this platform in this build (got ${Platform.operatingSystem}).');
     }
 

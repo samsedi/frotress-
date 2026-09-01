@@ -154,6 +154,8 @@ class _PassphraseStepState extends State<_PassphraseStep> {
   final _passphraseController = TextEditingController();
   final _confirmController = TextEditingController();
 
+  bool _obscureText = true;
+
   @override
   void dispose() {
     _passphraseController.dispose();
@@ -205,22 +207,30 @@ class _PassphraseStepState extends State<_PassphraseStep> {
         ],
         TextField(
           controller: _passphraseController,
-          obscureText: true,
+          obscureText: _obscureText,
           decoration: InputDecoration(
             labelText: 'Passphrase (min. 12 characters)',
             filled: true,
             fillColor: Colors.white,
+            suffixIcon: IconButton(
+              icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+              onPressed: () => setState(() => _obscureText = !_obscureText),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _confirmController,
-          obscureText: true,
+          obscureText: _obscureText,
           decoration: InputDecoration(
             labelText: 'Confirm Passphrase',
             filled: true,
             fillColor: Colors.white,
+            suffixIcon: IconButton(
+              icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+              onPressed: () => setState(() => _obscureText = !_obscureText),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           ),
         ),
