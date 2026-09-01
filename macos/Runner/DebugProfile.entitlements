@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Sandbox has its own restriction on dlopen-ing a dynamically
+	     extracted file, separate from (and in addition to) Library
+	     Validation below — disabling library validation alone does not
+	     let a sandboxed process load an external dylib from its own tmp
+	     directory. Most desktop crypto wallets ship outside the Mac App
+	     Store anyway (notarized, not sandboxed), so this isn't a
+	     regression for this app's likely distribution model. If Mac App
+	     Store distribution is wanted later, the native library needs to
+	     be embedded into the signed .app bundle at build time (an Xcode
+	     "Embed Libraries" phase) instead of loaded via dlopen at runtime
+	     — see rust_bridge_service.dart's docs. -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>
