@@ -4,6 +4,10 @@ A self-custody EVM wallet for iOS, Android, and macOS, built with a Flutter fron
 
 There is no backend database, no user accounts, and no central server that ever sees key material. Mnemonic generation, address derivation, transaction construction, and signing all happen purely on the device using a 2-of-3 Shamir's Secret Sharing scheme.
 
+## 🔗 Rust Core Backend
+The secure Rust engine that powers this wallet is open source and maintained in a separate repository. 
+[**View FortressWallet Rust Core**](https://github.com/samsedi/fortresswallet)
+
 ## Contents
 - [Features](#features)
 - [Architecture](#architecture)
