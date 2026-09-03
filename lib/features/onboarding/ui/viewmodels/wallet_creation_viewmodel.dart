@@ -50,6 +50,11 @@ class WalletCreationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearError() {
+    errorMessage = null;
+    notifyListeners();
+  }
+
   /// Runs the real DKG ceremony. On success, moves to the shares-backup
   /// step; on failure, returns to the passphrase step with `errorMessage`
   /// set rather than silently retrying or falling back to a mock result.

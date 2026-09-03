@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/rust_bridge_service.dart';
 import '../../../home/ui/views/home_view.dart';
+import '../../../../core/utils/error_dialog.dart';
+import '../../../../core/utils/error_mapper.dart';
 import '../viewmodels/import_wallet_viewmodel.dart';
 
 class ImportWalletFlowView extends StatefulWidget {
@@ -87,6 +89,14 @@ class _InputSharesStepState extends State<_InputSharesStep> {
     _shareController.clear();
   }
 
+  void _confirmShares() {
+    widget.viewModel.confirmShares();
+    if (widget.viewModel.errorMessage != null) {
+      final userMessage = ErrorMapper.mapErrorToUserFriendlyMessage(widget.viewModel.errorMessage!);
+      showAppErrorDialog(context, 'Invalid Shares', userMessage);
+    }
+  }
+
   @override
   void dispose() {
     _shareController.dispose();
@@ -105,14 +115,6 @@ class _InputSharesStepState extends State<_InputSharesStep> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textLight, height: 1.5),
         ),
         const SizedBox(height: 24),
-        if (widget.viewModel.errorMessage != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Text(widget.viewModel.errorMessage!, style: TextStyle(color: Colors.red.shade900)),
-          ),
-          const SizedBox(height: 16),
-        ],
         Row(
           children: [
             Expanded(
@@ -162,7 +164,7 @@ class _InputSharesStepState extends State<_InputSharesStep> {
         ),
         const SizedBox(height: 16),
         ElevatedButton(
-          onPressed: widget.viewModel.shares.length >= 2 ? widget.viewModel.confirmShares : null,
+          onPressed: widget.viewModel.shares.length >= 2 ? _confirmShares : null,
           style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
           child: Text('CONTINUE (${widget.viewModel.shares.length} ADDED)'),
         ),
@@ -202,7 +204,11 @@ class _PassphraseStepState extends State<_PassphraseStep> {
 
     // Navigation is deferred to _VerifyAddressStep after the user confirms
     // the recovered address. importWallet() only moves to verifyAddress.
-    await widget.viewModel.importWallet(pass);
+    final success = await widget.viewModel.importWallet(pass);
+    if (!success && mounted && widget.viewModel.errorMessage != null) {
+      final userMessage = ErrorMapper.mapErrorToUserFriendlyMessage(widget.viewModel.errorMessage!);
+      showAppErrorDialog(context, 'Import Failed', userMessage);
+    }
   }
 
   @override
@@ -217,14 +223,6 @@ class _PassphraseStepState extends State<_PassphraseStep> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textLight, height: 1.5),
         ),
         const SizedBox(height: 32),
-        if (widget.viewModel.errorMessage != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Text(widget.viewModel.errorMessage!, style: TextStyle(color: Colors.red.shade900)),
-          ),
-          const SizedBox(height: 16),
-        ],
         TextField(
           controller: _passphraseController,
           obscureText: true,

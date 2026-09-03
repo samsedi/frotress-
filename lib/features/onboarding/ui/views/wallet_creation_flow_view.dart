@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/rust_bridge_service.dart';
+import '../../../../core/utils/error_dialog.dart';
+import '../../../../core/utils/error_mapper.dart';
 import '../../../home/ui/views/home_view.dart';
 import '../viewmodels/wallet_creation_viewmodel.dart';
 
@@ -30,7 +32,15 @@ class _WalletCreationFlowViewState extends State<WalletCreationFlowView> {
     super.dispose();
   }
 
-  void _onViewModelUpdate() => setState(() {});
+  void _onViewModelUpdate() {
+    setState(() {});
+    if (_viewModel.errorMessage != null && mounted) {
+      final userMessage = ErrorMapper.mapErrorToUserFriendlyMessage(_viewModel.errorMessage!);
+      // Avoid infinite loop
+      _viewModel.clearError();
+      showAppErrorDialog(context, 'Creation Failed', userMessage);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,14 +207,6 @@ class _PassphraseStepState extends State<_PassphraseStep> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textLight, height: 1.5),
         ),
         const SizedBox(height: 32),
-        if (widget.viewModel.errorMessage != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Text(widget.viewModel.errorMessage!, style: TextStyle(color: Colors.red.shade900)),
-          ),
-          const SizedBox(height: 16),
-        ],
         TextField(
           controller: _passphraseController,
           obscureText: _obscureText,

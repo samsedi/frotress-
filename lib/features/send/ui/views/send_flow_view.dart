@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/rust_bridge_service.dart';
+import '../../../../core/utils/error_dialog.dart';
+import '../../../../core/utils/error_mapper.dart';
 import '../viewmodels/send_viewmodel.dart';
 
 class SendFlowView extends StatefulWidget {
@@ -31,6 +33,12 @@ class _SendFlowViewState extends State<SendFlowView> {
 
   void _onViewModelUpdate() {
     setState(() {});
+    if (_viewModel.errorMsg != null && mounted) {
+      final userMessage = ErrorMapper.mapErrorToUserFriendlyMessage(_viewModel.errorMsg!);
+      // Avoid infinite loop by clearing the error synchronously before showing dialog
+      _viewModel.clearError();
+      showAppErrorDialog(context, 'Transaction Failed', userMessage);
+    }
   }
 
   @override
@@ -242,14 +250,6 @@ class _ConfirmSummaryStepState extends State<_ConfirmSummaryStep> {
           ),
         ),
         const SizedBox(height: 24),
-        if (viewModel.errorMsg != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Text(viewModel.errorMsg!, style: TextStyle(color: Colors.red.shade900)),
-          ),
-          const SizedBox(height: 16),
-        ],
         Text('WALLET PASSPHRASE', style: Theme.of(context).textTheme.labelSmall),
         const SizedBox(height: 12),
         TextField(

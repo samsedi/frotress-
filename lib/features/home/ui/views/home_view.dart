@@ -9,6 +9,7 @@ import '../../../receive/ui/views/receive_view.dart';
 import '../../../send/ui/views/send_flow_view.dart';
 import '../../../settings/ui/views/settings_view.dart';
 import '../../../history/ui/views/asset_detail_view.dart';
+import '../../../../core/utils/error_mapper.dart';
 
 class AssetData {
   final EvmNetwork network;
@@ -98,58 +99,76 @@ class _HomeViewState extends State<HomeView> {
     try {
       final address = await _rustBridgeService.getAddress();
       if (!mounted) return;
-      setState(() => _address = address);
-
+      
       final chainIds = NetworkConfig.all.map((n) => n.chainId).toList();
       final prices = await _priceService.fetchPrices(chainIds);
-      
-      final newAssets = <AssetData>[];
+
+      // 1. Build initial placeholder assets instantly
+      final placeholderAssets = <AssetData>[];
       for (final network in NetworkConfig.all) {
-        WalletBalance? nativeBalance;
-        try {
-          nativeBalance = await _rustBridgeService.getBalance(
-            rpcUrls: network.rpcUrls,
-            chainId: network.chainId,
-          );
-        } catch (e) {
-          print('Failed to get balance for ${network.name}: $e');
-        }
-        newAssets.add(AssetData(
+        placeholderAssets.add(AssetData(
           network: network,
           token: null,
-          balance: nativeBalance,
+          balance: null,
           livePriceUsd: prices[network.chainId],
         ));
-
         for (final token in network.tokens) {
-          WalletBalance? tokenBalance;
-          try {
-            tokenBalance = await _rustBridgeService.getErc20Balance(
-              rpcUrls: network.rpcUrls,
-              chainId: network.chainId,
-              tokenAddress: token.contractAddress,
-            );
-          } catch (e) {
-            print('Failed to get token balance for ${token.symbol}: $e');
-          }
-          newAssets.add(AssetData(
+          placeholderAssets.add(AssetData(
             network: network,
             token: token,
-            balance: tokenBalance,
+            balance: null,
             livePriceUsd: 1.0,
           ));
         }
       }
 
-      if (!mounted) return;
       setState(() {
-        _assets = newAssets;
+        _address = address;
+        _assets = placeholderAssets;
+        _loading = false;
       });
+
+      // 2. Fetch balances concurrently and update UI progressively
+      for (int i = 0; i < placeholderAssets.length; i++) {
+        final asset = placeholderAssets[i];
+        
+        Future(() async {
+          try {
+            WalletBalance? bal;
+            if (asset.token == null) {
+              bal = await _rustBridgeService.getBalance(
+                rpcUrls: asset.network.rpcUrls,
+                chainId: asset.network.chainId,
+              );
+            } else {
+              bal = await _rustBridgeService.getErc20Balance(
+                rpcUrls: asset.network.rpcUrls,
+                chainId: asset.network.chainId,
+                tokenAddress: asset.token!.contractAddress,
+              );
+            }
+            if (mounted) {
+              setState(() {
+                _assets[i] = AssetData(
+                  network: asset.network,
+                  token: asset.token,
+                  balance: bal,
+                  livePriceUsd: asset.livePriceUsd,
+                );
+              });
+            }
+          } catch (e) {
+            print('Failed to get balance for \${asset.name}: \$e');
+          }
+        });
+      }
+
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      setState(() {
+        _errorMessage = ErrorMapper.mapErrorToUserFriendlyMessage(e);
+        _loading = false;
+      });
     }
   }
 

@@ -246,4 +246,9 @@ class SendViewModel extends ChangeNotifier {
     passphrase = value;
     notifyListeners();
   }
+
+  void clearError() {
+    errorMsg = null;
+    notifyListeners();
+  }
 }

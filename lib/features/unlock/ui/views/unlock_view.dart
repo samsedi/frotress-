@@ -4,6 +4,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/rust_bridge_service.dart';
 import '../../../home/ui/views/home_view.dart';
 import '../../../onboarding/ui/views/welcome_view.dart';
+import '../../../../core/utils/error_dialog.dart';
+import '../../../../core/utils/error_mapper.dart';
 import '../viewmodels/unlock_viewmodel.dart';
 /// Shown on launch when a wallet already exists on this device — the
 /// "log back in" screen `main.dart` was missing entirely before, which
@@ -73,6 +75,9 @@ class _UnlockViewState extends State<UnlockView> {
         MaterialPageRoute(builder: (_) => const HomeView()),
         (route) => false,
       );
+    } else if (mounted && _viewModel.errorMessage != null) {
+      final userMessage = ErrorMapper.mapErrorToUserFriendlyMessage(_viewModel.errorMessage!);
+      showAppErrorDialog(context, 'Unlock Failed', userMessage);
     }
   }
 
@@ -150,14 +155,6 @@ class _UnlockViewState extends State<UnlockView> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textLight, height: 1.5),
               ),
               const SizedBox(height: 32),
-              if (_viewModel.errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-                  child: Text(_viewModel.errorMessage!, style: TextStyle(color: Colors.red.shade900), textAlign: TextAlign.center),
-                ),
-                const SizedBox(height: 16),
-              ],
               TextField(
                 controller: _passphraseController,
                 obscureText: true,
