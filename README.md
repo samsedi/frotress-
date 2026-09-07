@@ -73,15 +73,6 @@ The shares are encrypted with AES-256-GCM / XChaCha20-Poly1305 under a key deriv
 - **Point of Signing** — The passcode is required immediately before signing. The Rust FFI takes the encrypted shares, the passcode, and the transaction intent, decrypts, signs, and returns only the finalized raw transaction. 
 - **Receipt Polling** — After broadcast, the UI continuously polls the network for the transaction receipt, actively waiting for network consensus.
 
-## Threat model
-
-| Threat | Mitigation | Residual risk |
-|---|---|---|
-| Malware on the device reading app storage | Ciphertext is useless without the user's passcode / Argon2id derived key | An attacker with a rooted device and the user's passcode can decrypt the vault |
-| Offline brute force of an extracted vault | Argon2id key derivation makes brute-forcing computationally expensive | Weak passcodes (e.g. 4-digits) are mathematically vulnerable to brute-force regardless of Argon2id |
-| Malicious or compromised RPC Node | Transaction built and signed locally | Can deny service, lie about balances, and censor transactions, but cannot steal funds |
-| Float rounding losing value | Amount conversion to Wei (`10^18`) relies on precise string parsing / BigInt logic | None known |
-| Secrets in logs | Sensitive shares and passwords are never logged out to the Flutter console | A native memory crash dump is outside the app's control |
 
 ## Local development
 
